@@ -1,24 +1,94 @@
 // main_screen.dart
 
-// 1. cloud_firestore 라이브러리 가져오기
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; // 👈 1. FCM 라이브러리 import
 import 'package:flutter/material.dart';
 
 import 'add_habit_screen.dart';
-import 'calendar_screen.dart'; // 👈 1. 방금 만든 calendar_screen.dart를 import 하세요.
+import 'calendar_screen.dart';
 
-class MainScreen extends StatelessWidget {
+// 1. StatelessWidget에서 StatefulWidget으로 변경합니다.
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  // 2. 화면이 '짠!'하고 나타날 때 딱 한 번 실행되는 initState 추가
+  @override
+  void initState() {
+    super.initState();
+
+    // 🔥 2. initState에 이 함수 호출 코드를 추가합니다.
+    _requestNotificationPermission();
+
+    // initState가 끝난 후, 첫 프레임이 그려진 직후에 코드를 실행하도록 예약합니다.
+    // build가 완료된 후에 context를 사용해야 안전하기 때문입니다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showCheeringMessageIfNeeded();
+    });
+  }
+
+  // 🔥 3. 알림 권한을 요청하는 함수를 새로 만듭니다.
+  void _requestNotificationPermission() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    print('사용자에게 받은 알림 권한: ${settings.authorizationStatus}');
+  }
+
+
+  // 🔥 3. 응원 메시지를 보낼지 말지 결정하고, 필요하면 보여주는 함수
+  void _showCheeringMessageIfNeeded() async {
+    // 1) 어제 날짜 계산하기
+    final now = DateTime.now();
+    final yesterdayStart = DateTime(now.year, now.month, now.day - 1); // 어제 시작
+    final yesterdayEnd = DateTime(now.year, now.month, now.day - 1, 23, 59, 59); // 어제 끝
+
+    // 2) Firestore에서 '어제 생성됐지만 완료는 안 된' 습관이 있는지 확인
+    final snapshot = await FirebaseFirestore.instance
+        .collection('habits')
+        .where('createdAt', isGreaterThanOrEqualTo: yesterdayStart)
+        .where('createdAt', isLessThanOrEqualTo: yesterdayEnd)
+        .where('isCompleted', isEqualTo: false)
+        .limit(1) // 1개만 찾으면 되므로 limit(1)로 효율적으로 조회
+        .get();
+
+    // 3) 만약 그런 습관이 1개라도 있다면 (snapshot.docs가 비어있지 않다면)
+    if (snapshot.docs.isNotEmpty) {
+      // 응원 메시지를 스낵바로 보여주기
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("어제는 아쉬웠지만, 오늘은 해낼 수 있어요! 🔥"),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // 4. 기존의 build 메소드는 그대로 가져옵니다.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('나의 습관 트래커'),
         actions: [
-          // 🔥 여기를 수정/추가하세요!
           IconButton(
             icon: Icon(Icons.calendar_today),
             onPressed: () {
-              // 달력 화면으로 이동하는 코드
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => CalendarScreen()),
@@ -28,9 +98,6 @@ class MainScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () {
-              // 이 부분을 수정/추가하세요!
-              // 1. add_habit_screen.dart를 import 해주세요.
-              //    import '../screens/add_habit_screen.dart'; 파일 상단에 추가!
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => AddHabitScreen()),
@@ -39,56 +106,59 @@ class MainScreen extends StatelessWidget {
           ),
         ],
       ),
-      // body 부분을 이렇게 바꿔주세요.
       body: StreamBuilder<QuerySnapshot>(
-        // 2. 어떤 데이터를 실시간으로 들을지 지정
-        // 'habits' 컬렉션의 데이터를 'createdAt' 시간 순서대로 들을 거야!
-        stream: FirebaseFirestore.instance.collection('habits').orderBy('createdAt').snapshots(),
-
-        // 3. 데이터가 바뀔 때마다 이 builder 부분이 새로 실행돼요
+        stream: FirebaseFirestore.instance
+            .collection('habits')
+            .orderBy('createdAt')
+            .snapshots(),
         builder: (context, snapshot) {
-          // 4. 데이터 로딩 중일 때
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator()); // 로딩 동그라미 보여주기
+            return Center(child: CircularProgressIndicator());
           }
-
-          // 5. 데이터가 없을 때
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(child: Text("아직 등록된 습관이 없어요.\n새 습관을 추가해보세요! 💪"));
           }
-
-          // 6. 데이터가 성공적으로 왔을 때!
-          final habitDocs = snapshot.data!.docs; // 습관 목록 가져오기
-
-          // ListView를 사용해서 목록을 그려줘요.
+          final habitDocs = snapshot.data!.docs;
           return ListView.builder(
-            itemCount: habitDocs.length, // 목록 개수
+            itemCount: habitDocs.length,
             itemBuilder: (context, index) {
-              // habitDocs[index]에서 각 습관의 데이터를 꺼내요.
               final habit = habitDocs[index];
-              final String docId = habit.id; // 🔥 업데이트에 꼭 필요한 문서의 고유 ID
-              final habitName = habit['name']; // 'name' 필드의 값을 가져옴
-              // 'isCompleted' 필드를 가져오되, 없으면(null) 기본값으로 false를 사용해요.
+              final String docId = habit.id;
+              final habitName = habit['name'];
               final bool isCompleted = habit['isCompleted'] ?? false;
-
               return ListTile(
                 title: Text(
                   habitName,
                   style: TextStyle(
-                    // 완료된 항목은 취소선 표시
-                    decoration: isCompleted ? TextDecoration.lineThrough : null,
+                    decoration:
+                    isCompleted ? TextDecoration.lineThrough : null,
                   ),
                 ),
                 trailing: Checkbox(
-                  // ✅ 1. 체크박스의 값은 Firestore 문서의 'isCompleted' 값!
                   value: isCompleted,
-                  // ✅ 2. 사용자가 체크박스를 누르면 상태를 Firestore에 업데이트!
                   onChanged: (bool? newValue) {
                     if (newValue != null) {
                       FirebaseFirestore.instance
                           .collection('habits')
-                          .doc(docId) // 이 ID를 가진 문서를 찾아서
-                          .update({'isCompleted': newValue}); // isCompleted 필드를 새 값으로 변경!
+                          .doc(docId)
+                          .update({'isCompleted': newValue});
+                      if (newValue == true) {
+                        final List<String> successMessages = [
+                          "오늘도 해냈군요! 정말 대단해요! 🎉",
+                          "목표 달성! 멋진 하루예요.",
+                          "정상에 한 걸음 더 가까워졌어요! 🚀",
+                          "이 꾸준함, 정말 멋져요!",
+                          "최고예요! 스스로를 칭찬해주세요. ✨",
+                        ];
+                        final randomMessage = successMessages[
+                        Random().nextInt(successMessages.length)];
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(randomMessage),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
                     }
                   },
                 ),

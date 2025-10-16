@@ -466,5 +466,39 @@ habit_tracker_app/
 
 ### 5. AI 코치 추가
 
-#### AI 대신 간단한 규칙기반 피드백 
+#### AI 대신 간단한 규칙기반 피드백 : 성공 메시지
+
+- main_screen.dart에 dart:math 라이브러리 가져오기
+
+- main_screen.dart의 ListView.builder 안쪽, ListTile onChanged 부분 수정
+
+    ![alt text](image-19.png)
+
+#### 응원메시지 구현
+
+- 어제 습관을 실천하지 못해도 격려를 하는 메시지 생성
+- 화면이 시작될 때(initState) 함수에서 어제 날짜를 계산
+- Firestore에서 어제 날짜에 생성되었지만, isCompleted가 false인 습관이 있는지 확인
+
+- main_screen.dart 의 MainScreen을 StatelessWidget에서 StatefulWidget으로 변경
+
+### 6. 푸시알림 붙이기
+
+#### FCM 라이브러리 설치 
+- Firebase로부터 메시지를 받을 수 있도록 Firebase Cloud Messaging(FCM) 라이브러리를 설치
+
+    ```powershell
+    > flutter pub add firebase_messaging
+    ```
+
+#### 앱 시작 시 Firebase 초기화 코드 수정
+
+- main_screen.dart _MainScreenState 클래스 안에 있는 initState 함수 수정
+
+
+    ![alt text](image-20.png)
+
+#### 직접 알림 시간을 설정하는 UI
+
+
 
