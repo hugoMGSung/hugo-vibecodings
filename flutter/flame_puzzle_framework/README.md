@@ -130,3 +130,22 @@ A new Flutter Flame Game framework with VibeCoding
     - 작성 프로젝트 내에서의 파일
         - `core/theme.dart` : 앱 전체 테마 정의 (색상, 카드, 버튼 스타일 등)
         - `app_router.dart` : 화면 이동 라우팅 설정 (동의 → 홈 → 설정 등)
+
+4. 결과 화면
+
+    ![alt text](img_20251024_001.jpg)
+
+    ![alt text](img_20251024_007.jpg)
+
+### 머티리얼 다크모드 적용
+
+- lib/core/theme_controller.dart 추가 작성
+- lib/core/theme.dart 내용 수정. appTheme에서 appThemeLight, appThemeDark로 분리 작성
+- lib/main.dart 수정
+- lib/features/settings/settings_page.dart 에 다크모드 토글버튼 추가
+
+    ![alt text](image-6.png)
+
+    ![alt text](image-7.png)
+
+
