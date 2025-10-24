@@ -4,6 +4,9 @@ import '../../game/puzzles/number_sum_puzzle.dart';
 import '../../game/base_puzzle_game.dart';
 import '../../features/tutorial/tutorial_overlay.dart';
 
+import '../../l10n/generated/app_localizations.dart';
+import '../../core/i18n.dart'; // (위 확장 사용 시)
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -39,7 +42,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('숫자 총합'),
+        title: Text(context.t.appTitle),
         actions: [
           IconButton(onPressed: () => showTutorial(context), icon: const Icon(Icons.help_outline)),
         ],
@@ -108,7 +111,7 @@ class _MainTab extends StatelessWidget {
                 children: [
                   Text('일일 도전', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 8),
-                  FilledButton(onPressed: onPlayDaily, child: const Text('플레이')),
+                  FilledButton(onPressed: onPlayDaily, child: Text(context.t.play)),
                 ],
               ),
             ),

@@ -23,11 +23,15 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_localizations: # ✅ 추가
+    sdk: flutter
+
+  intl: ^0.20.2                     # ✅ 추가
   flame: ^1.10.0                  # flame: 게임엔진(2D, 입력/렌더링 등).
-  go_router: ^14.2.0              # 화면 전환/라우팅(동의→홈→설정 등).
-  flutter_riverpod: ^2.5.1        # 상태관리
+  go_router: ^16.3.0              # 화면 전환/라우팅(동의→홈→설정 등).
+  flutter_riverpod: ^3.0.3        # 상태관리
   shared_preferences: ^2.3.2      # 로컬 저장(설정 토글 등)
-  package_info_plus: ^8.0.0       # 앱 버전 표시 등에 사용
+  package_info_plus: ^9.0.0       # 앱 버전 표시 등에 사용
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -41,7 +45,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0           # 기본 린트 규칙 세트.
+  flutter_lints: ^6.0.0           # 기본 린트 규칙 세트.
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -53,6 +57,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  # 🔽 gen-l10n 설정 (기본값으로도 되지만 명시 추천)
+  generate: true
 
   assets:       ## 에셋 추가
     - assets/images/

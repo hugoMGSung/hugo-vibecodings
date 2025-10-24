@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/storage/local_storage.dart';
 import '../../core/theme_controller.dart';
 
+import '../../l10n/generated/app_localizations.dart';
+import '../../core/locale_controller.dart';
+
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
@@ -36,6 +39,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget build(BuildContext context) {
     final themeCtrl = ref.watch(themeModeProvider); // 현재 모드
     final isDark = themeCtrl == ThemeMode.dark;
+    final currentLocale = ref.watch(localeProvider);     // Locale? (en/ko/null)
+    final langCode = currentLocale?.languageCode ?? 'system';
+
+    String _labelFor(String code) {
+      switch (code) {
+        case 'en': return 'English';
+        case 'ko': return '한국어';
+        default: return 'System';
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('설정')),
@@ -58,6 +71,27 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ref.read(themeModeProvider.notifier).setDark(v);
               // 로컬에도 저장은 컨트롤러에서 처리 중
             },
+          ),
+          // 언어 선택 (드롭다운)
+          ListTile(
+            title: Text(AppLocalizations.of(context)!.settingsTitle), // 원하면 '언어' 키 추가
+            subtitle: Text(_labelFor(langCode)),                      // 표시 문자열
+            trailing: DropdownButton<String>(
+              value: langCode,
+              items: const [
+                DropdownMenuItem(value: 'system', child: Text('System')),
+                DropdownMenuItem(value: 'en', child: Text('English')),
+                DropdownMenuItem(value: 'ko', child: Text('한국어')),
+              ],
+              onChanged: (v) {
+                if (v == 'system') {
+                  ref.read(localeProvider.notifier).setLocale(null);
+                } else {
+                  ref.read(localeProvider.notifier).setLocale(v);
+                }
+                setState(() {}); // 즉시 반영
+              },
+            ),
           ),
           // 3) 자동 잠금
           SwitchListTile(

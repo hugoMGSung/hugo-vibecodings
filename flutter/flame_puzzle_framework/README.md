@@ -149,3 +149,41 @@ A new Flutter Flame Game framework with VibeCoding
     ![alt text](image-7.png)
 
 
+### 다국어 모드 
+
+- flutter_localizations + gen-l10n(ARB 파일) + 전역 Locale 컨트롤러(리버팟) + 설정에서 언어 선택
+
+1. pubspec.yaml 추가/수정
+
+2. 루트에 l10n.yaml(선택) 만들면 경로/옵션 명시
+
+3. 번역 파일(ARB) 만들기
+    - lib/l10n/app_en.arb
+    - lib/l10n/app_ko.arb
+
+4. 터미널에서 아래 실행
+
+    ```bash
+    > flutter clean
+    > flutter pub get
+    > flutter gen-l10n
+    ```
+
+5. lib/core/locale_controller.dart 전역 Locale 컨트롤러 생성
+
+6. LocalStorage에 getString/setString/remove가 없다면 간단히 추가
+
+7. main.dart 수정 
+
+8. lib/core/i18n.dart 생성
+
+
+9. features/home/home_page.dart 등의 문자열 치환
+
+10. features/settings/settings_page.dart 드롭다운 추가
+
+11. 실행화면
+
+    ![alt text](image-8.png)
+
+    ![alt text](image-9.png)

@@ -2,19 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/storage/local_storage.dart';
 
+// Riverpod 3.x
 final themeModeProvider =
-StateNotifierProvider<ThemeModeController, ThemeMode>(
-      (ref) => ThemeModeController()..load(),
-);
+NotifierProvider<ThemeModeController, ThemeMode>(() => ThemeModeController());
 
-class ThemeModeController extends StateNotifier<ThemeMode> {
-  ThemeModeController() : super(ThemeMode.light);
-
+class ThemeModeController extends Notifier<ThemeMode> {
   static const _key = 'darkMode';
 
-  Future<void> load() async {
-    final v = await LocalStorage.instance.getBool(_key) ?? false;
-    state = v ? ThemeMode.dark : ThemeMode.light;
+  @override
+  ThemeMode build() {
+    // 초기값
+    _load();                 // 비동기 로딩 (완료되면 state 갱신)
+    return ThemeMode.light;
+  }
+
+  Future<void> _load() async {
+    final isDark = await LocalStorage.instance.getBool(_key) ?? false;
+    state = isDark ? ThemeMode.dark : ThemeMode.light;
   }
 
   Future<void> setDark(bool isDark) async {
