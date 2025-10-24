@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.t.appTitle),
+        title: Text(context.t.appTitle),  // 다국어 교체!
         actions: [
           IconButton(onPressed: () => showTutorial(context), icon: const Icon(Icons.help_outline)),
         ],
@@ -57,16 +57,28 @@ class _HomePageState extends State<HomePage> {
         onDestinationSelected: (i) async {
           if (i == 2) {
             // 설정은 별도 화면으로 푸시
-            await context.push('/settings');
+            await context.push('/settings');  // 이건 폴더 경로!
             if (mounted) setState(() => bottomIndex = 0); // 돌아오면 메인 탭으로
             } else {
               setState(() => bottomIndex = i);
             }
           },
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: '메인'),
-          NavigationDestination(icon: Icon(Icons.emoji_events_outlined), selectedIcon: Icon(Icons.emoji_events), label: '일일 도전'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: '설정'),
+        destinations: [
+          NavigationDestination(
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: const Icon(Icons.home),
+              label: context.t.tabHome,
+          ),
+          NavigationDestination(
+              icon: const Icon(Icons.emoji_events_outlined),
+              selectedIcon: const Icon(Icons.emoji_events),
+              label: context.t.tabAwards,
+          ),
+          NavigationDestination(
+              icon: const Icon(Icons.settings_outlined),
+              selectedIcon: const Icon(Icons.settings),
+              label: context.t.tabSettings,
+          ),
         ],
       ),
     );
@@ -76,7 +88,7 @@ class _HomePageState extends State<HomePage> {
     final seed = DateTime.now().toIso8601String().substring(0, 10);
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => PuzzleGameScreen(
-        title: '일일 도전',
+        title: context.t.dailyTitle,                 // ✅ 다국어
         generator: () => NumberSumPuzzle.daily(seed),   // ✅ 함수로 전달
       ),
     ));
@@ -85,7 +97,7 @@ class _HomePageState extends State<HomePage> {
   void _startLevel(BuildContext context, int level) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => PuzzleGameScreen(
-        title: '레벨 $level',
+        title: context.t.levelN(level),              // ✅ 다국어(포지셔널)
         generator: () => NumberSumPuzzle.level(level), // ✅ 함수로 전달
       ),
     ));
@@ -109,7 +121,7 @@ class _MainTab extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Text('일일 도전', style: Theme.of(context).textTheme.titleLarge),
+                  Text(context.t.homeDaily, style: Theme.of(context).textTheme.titleLarge),  // 다국어
                   const SizedBox(height: 8),
                   FilledButton(onPressed: onPlayDaily, child: Text(context.t.play)),
                 ],
@@ -117,9 +129,10 @@ class _MainTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Text('숫자 총합', style: Theme.of(context).textTheme.titleLarge),
+          Text(context.t.homeDaily, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          FilledButton(onPressed: onPlayLevel1, child: const Text('레벨 1')),
+          //FilledButton(onPressed: onPlayLevel1, child: const Text('레벨 1')),
+          FilledButton(onPressed: onPlayLevel1, child: Text(context.t.levelN(1))),
         ],
       ),
     );
@@ -135,11 +148,12 @@ class AwardsTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('어워드', style: Theme.of(context).textTheme.headlineSmall),
+          // Text('어워드', style: Theme.of(context).textTheme.headlineSmall),
+          Text(context.t.tabAwards, style: Theme.of(context).textTheme.titleLarge),  // 다국어 치환
           const SizedBox(height: 8),
-          Text('월별/이벤트 기반 도전 진행도를 여기에 표시하세요.', style: Theme.of(context).textTheme.bodyMedium),
+          Text(context.t.awardsHint, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 16),
-          FilledButton(onPressed: () => context.go('/awards'), child: const Text('자세히')),
+          FilledButton(onPressed: () => context.go('/awards'), child: Text(context.t.details)),
         ],
       ),
     );

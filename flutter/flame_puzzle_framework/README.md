@@ -187,3 +187,6 @@ A new Flutter Flame Game framework with VibeCoding
     ![alt text](image-8.png)
 
     ![alt text](image-9.png)
+
+
+#### home_page.dart 적용

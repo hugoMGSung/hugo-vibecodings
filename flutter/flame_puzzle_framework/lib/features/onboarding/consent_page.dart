@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/storage/local_storage.dart';
+import '../../core/i18n.dart';
 
 /// First-run consent gate: shows ToS/Privacy text and moves to home after consent.
 class ConsentGate extends StatefulWidget {
@@ -41,7 +42,7 @@ class _ConsentGateState extends State<ConsentGate> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              Text('환영합니다!', style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
+              Text(context.t.consentTitle, style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               const Text(
                 '앱의 약관과 개인정보 처리방침을 읽고 동의해주세요. '
