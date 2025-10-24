@@ -13,7 +13,7 @@ ThemeData appTheme(BuildContext context) {
     ),
     appBarTheme: const AppBarTheme(centerTitle: true),
     snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
-    cardTheme: const CardTheme(
+    cardTheme: const CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
     ),

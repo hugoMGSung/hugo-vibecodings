@@ -35,7 +35,6 @@ A new Flutter Flame Game framework with VibeCoding
     │     ├─ notifications/…                # 알림 인터페이스(스텁)
     │     └─ analytics/…                    # 분석 로거(프린트 스텁)
     └─ assets/images, assets/audio          # 리소스 폴더(미리 등록)
-
     ```
 
 - ZIP 내용 덮어쓰기
@@ -44,3 +43,90 @@ A new Flutter Flame Game framework with VibeCoding
 
     ![alt text](image-1.png)
 
+- 작업 후 오류 발생
+
+### 오류 제거
+
+![alt text](image-2.png)
+
+- 단 오류가 난 소스를 따로 빼내면 전체 동작이 안되어서 더 복잡해짐. 있는 구조에서 오류를 수정하는 것이 더 효율적
+
+- 하나씩 오류나는 부분을 캡쳐 수정 요청
+
+    ![alt text](image-3.png)
+
+- 불합리한 화면 전환 수정 요청
+
+    ![alt text](image-4.png)
+
+- 완성된 소스코드 압축해서 ChatGPT 관련 채팅에 업로드
+
+    ![alt text](image-5.png)
+
+
+
+### 초기 분석
+
+전체 구성 다시확인
+
+- 전체 구조 개요
+
+    ```bash
+    flame_puzzle_framework/
+    ├─ pubspec.yaml
+    ├─ lib/
+    │  ├─ main.dart                 # MaterialApp.router + Theme
+    │  ├─ app_router.dart           # GoRouter (/, /home, /settings, /awards)
+    │  ├─ core/theme.dart           # 통일 테마(버튼/카드/네비바/라운드)
+    │  ├─ features/
+    │  │  ├─ onboarding/consent_page.dart   # 동의 화면
+    │  │  ├─ home/home_page.dart            # 홈 + 하단 네비 + Daily/Level 버튼
+    │  │  ├─ settings/settings_page.dart    # 설정 (EasyBrain풍 리스트)
+    │  │  ├─ awards/awards_page.dart        # 월별 진행도 뷰
+    │  │  └─ tutorial/tutorial_overlay.dart # “플레이 방법” 모달
+    │  ├─ game/
+    │  │  ├─ base_puzzle_game.dart          # Flame GameWidget 래퍼
+    │  │  └─ puzzles/number_sum_puzzle.dart # 샘플 퍼즐(데일리/레벨 팩토리)
+    │  └─ services/
+    │     ├─ storage/local_storage.dart     # SharedPreferences 래퍼
+    │     ├─ ads/ads_service.dart           # 광고 인터페이스(스텁)
+    │     ├─ iap/iap_service.dart           # 결제 인터페이스(스텁)
+    │     ├─ notifications/…                # 알림 인터페이스(스텁)
+    │     └─ analytics/…                    # 분석 로거(프린트 스텁)
+    └─ assets/images, assets/audio          # 리소스 폴더(미리 등록)
+    ```
+
+1. `analysis_options.yaml` : Flutter/Dart 프로젝트의 “코드 분석 규칙 설정 파일”
+    - Dart analyzer(정적 분석기) 가 코드를 검사할 때 참고하는 설정 파일
+    - ESLint(자바스크립트)나 Pylint(파이썬)과 비슷한 역할
+
+    - 기본 구성 에시
+    ```yaml
+    ## 외부 린트 패키지를 불러옴 (보통 flutter_lints)
+    include: package:flutter_lints/flutter.yaml   # 현재 소스엔 이것만 존재
+
+    analyzer:
+    exclude:        # 분석하지 않을 폴더 지정
+        - build/**
+        - lib/generated/**
+    errors:         # 특정 오류나 경고의 심각도 조정 (error, warning, info, ignore)
+        unused_import: warning
+        dead_code: info
+
+    linter:
+    rules:      # 사용할 구체적인 린트 규칙 정의
+        prefer_const_constructors: true
+        avoid_print: true
+        always_use_package_imports: true
+    ```
+
+2. `pubspec.yaml` : Flutter/Dart 프로젝트의 메타데이터 + 의존성 + 리소스 선언 파일
+
+    - 앱이 “무엇을 쓰고(패키지), 무엇을 포함하고(assets), 어떤 버전에서 컴파일할지(SDK)”를 여기서 결정
+    - 버전 충돌: pubspec.lock 삭제 → flutter pub get. 그래도 안 되면 문제 패키지를 낮추거나 상위(Flutter/Dart) 업그레이드
+
+3. `lib/main.dart` : 앱 진입점
+    
+    - 작성 프로젝트 내에서의 파일
+        - `core/theme.dart` : 앱 전체 테마 정의 (색상, 카드, 버튼 스타일 등)
+        - `app_router.dart` : 화면 이동 라우팅 설정 (동의 → 홈 → 설정 등)

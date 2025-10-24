@@ -19,8 +19,23 @@ class _HomePageState extends State<HomePage> {
     final tabs = [
       _MainTab(onPlayDaily: () => _startDaily(context), onPlayLevel1: () => _startLevel(context, 1)),
       const AwardsTab(),
-      const SettingsStub(),
+      // const SettingsStub(), // 설정 부분 삭제
     ];
+
+    Widget body;
+      switch (bottomIndex) {
+        case 0:
+          body = _MainTab(
+            onPlayDaily: () => _startDaily(context),
+            onPlayLevel1: () => _startLevel(context, 1),
+          );
+          break;
+        case 1:
+          body = const AwardsTab();
+          break;
+        default:
+          body = const SizedBox.shrink();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -29,10 +44,22 @@ class _HomePageState extends State<HomePage> {
           IconButton(onPressed: () => showTutorial(context), icon: const Icon(Icons.help_outline)),
         ],
       ),
-      body: tabs[bottomIndex],
+      //body: tabs[bottomIndex],
+      body: body,
+      // bottomNavigationBar: NavigationBar(
+      //   selectedIndex: bottomIndex,
+      //   onDestinationSelected: (i) => setState(() => bottomIndex = i),
       bottomNavigationBar: NavigationBar(
         selectedIndex: bottomIndex,
-        onDestinationSelected: (i) => setState(() => bottomIndex = i),
+        onDestinationSelected: (i) async {
+          if (i == 2) {
+            // 설정은 별도 화면으로 푸시
+            await context.push('/settings');
+            if (mounted) setState(() => bottomIndex = 0); // 돌아오면 메인 탭으로
+            } else {
+              setState(() => bottomIndex = i);
+            }
+          },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: '메인'),
           NavigationDestination(icon: Icon(Icons.emoji_events_outlined), selectedIcon: Icon(Icons.emoji_events), label: '일일 도전'),
@@ -43,11 +70,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _startDaily(BuildContext context) {
-    final seed = DateTime.now().toIso8601String().substring(0, 10); // YYYY-MM-DD
+    final seed = DateTime.now().toIso8601String().substring(0, 10);
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => PuzzleGameScreen(
         title: '일일 도전',
-        generator: NumberSumPuzzle.daily(seed),
+        generator: () => NumberSumPuzzle.daily(seed),   // ✅ 함수로 전달
       ),
     ));
   }
@@ -56,7 +83,7 @@ class _HomePageState extends State<HomePage> {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => PuzzleGameScreen(
         title: '레벨 $level',
-        generator: NumberSumPuzzle.level(level),
+        generator: () => NumberSumPuzzle.level(level), // ✅ 함수로 전달
       ),
     ));
   }

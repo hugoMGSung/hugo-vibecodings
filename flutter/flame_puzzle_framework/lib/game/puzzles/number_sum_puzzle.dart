@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/events.dart';  // 추가
 
 /// Very small sample puzzle: select tiles to match a target sum.
-class NumberSumPuzzle extends FlameGame with TapCallbacks {  // version up, class change
+class NumberSumPuzzle extends FlameGame<World> with TapCallbacks {  // version up, class change
   final List<int> numbers;
   final int target;
 
@@ -71,9 +71,9 @@ class _Tile extends PositionComponent with TapCallbacks {  // version up, class 
   }
 
   @override
-  bool onTapDown(TapDownInfo info) {
+  void onTapDown(TapDownEvent event) {
     selected = !selected;
-    return false;
+    // event.handled = true; // (선택) 이벤트 소비 표시
   }
 }
 
