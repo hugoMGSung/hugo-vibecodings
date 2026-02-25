@@ -5,3 +5,7 @@
 
 ### 습관 트래커 + AI 코치 앱
 [리드미](./flutter/habit_tracker_app/README.md)
+
+
+## Chat GPT Codex
+[리드미](./openai/codex/README.md)
