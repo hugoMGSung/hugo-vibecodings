@@ -19,6 +19,18 @@ class PuzzleGameScreen extends StatelessWidget {
     return FutureBuilder<FlameGame<World>>(
       future: generator(),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(title: Text(title)),
+            body: Center(
+              child: Text(
+                '에러: ${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
         final game = snapshot.data;
         return Scaffold(
           appBar: AppBar(title: Text(title)),

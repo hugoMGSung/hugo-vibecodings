@@ -7,6 +7,11 @@ import '../../features/tutorial/tutorial_overlay.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/i18n.dart'; // (위 확장 사용 시)
 
+import '../../game/puzzles/daily_sum/daily_sum_generator.dart';
+import '../../game/puzzles/daily_sum/daily_sum_state.dart';
+import 'package:flame_puzzle_framework/game/puzzles/daily_sum/daily_sum_puzzle.dart';
+import '../play/daily_sum_page.dart'; // 네가 만들 플레이 페이지
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -89,7 +94,8 @@ class _HomePageState extends State<HomePage> {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => PuzzleGameScreen(
         title: context.t.dailyTitle,                 // ✅ 다국어
-        generator: () => NumberSumPuzzle.daily(seed),   // ✅ 함수로 전달
+        //generator: () => NumberSumPuzzle.daily(seed),   // ✅ 함수로 전달
+        generator: () => DailySumPuzzle.daily(seed), // 이걸로 변경 2025.12.29 !!
       ),
     ));
   }
