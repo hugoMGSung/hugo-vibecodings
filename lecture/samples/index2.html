@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FastAPI TODO</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    #todoInput {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    #addBtn {
+      padding: 10px 16px;
+      font-size: 16px;
+      border: none;
+      background-color: #2563eb;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #addBtn:hover {
+      background-color: #1d4ed8;
+    }
+
+    #todoList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .todo-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background-color: #fafafa;
+    }
+
+    .todo-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .completed {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    .delete-btn {
+      border: none;
+      background-color: #ef4444;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background-color: #dc2626;
+    }
+
+    .empty-message {
+      text-align: center;
+      color: #777;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TODO 리스트</h1>
+
+    <div class="input-area">
+      <input type="text" id="todoInput" placeholder="할 일을 입력하세요" />
+      <button id="addBtn">추가</button>
+    </div>
+
+    <ul id="todoList"></ul>
+  </div>
+
+  <script>
+    // FastAPI 서버 주소
+    const API_URL = "http://127.0.0.1:8000";
+
+    // HTML 요소 가져오기
+    const todoInput = document.getElementById("todoInput");
+    const addBtn = document.getElementById("addBtn");
+    const todoList = document.getElementById("todoList");
+
+    // -----------------------------
+    // 할 일 목록 불러오기
+    // -----------------------------
+    async function loadTodos() {
+      try {
+        const response = await fetch(`${API_URL}/todos`);
+        const todos = await response.json();
+
+        // 기존 목록 비우기
+        todoList.innerHTML = "";
+
+        // 목록이 비어 있으면 안내 문구 표시
+        if (todos.length === 0) {
+          todoList.innerHTML = `<li class="empty-message">등록된 할 일이 없습니다.</li>`;
+          return;
+        }
+
+        // 할 일들을 화면에 출력
+        todos.forEach(todo => {
+          renderTodo(todo);
+        });
+      } catch (error) {
+        console.error("목록 조회 실패:", error);
+        alert("할 일 목록을 불러오지 못했습니다.");
+      }
+    }
+
+    // -----------------------------
+    // 할 일 하나를 화면에 그리기
+    // -----------------------------
+    function renderTodo(todo) {
+      const li = document.createElement("li");
+      li.className = "todo-item";
+
+      const leftDiv = document.createElement("div");
+      leftDiv.className = "todo-left";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = todo.completed;
+
+      const span = document.createElement("span");
+      span.textContent = todo.title;
+
+      // 완료 상태이면 줄 긋기
+      if (todo.completed) {
+        span.classList.add("completed");
+      }
+
+      // 체크박스를 바꾸면 완료 상태 수정 API 호출
+      checkbox.addEventListener("change", async function () {
+        await updateTodo(todo.id, checkbox.checked);
+      });
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "삭제";
+      deleteBtn.className = "delete-btn";
+
+      // 삭제 버튼 클릭 시 삭제 API 호출
+      deleteBtn.addEventListener("click", async function () {
+        await deleteTodo(todo.id);
+      });
+
+      leftDiv.appendChild(checkbox);
+      leftDiv.appendChild(span);
+
+      li.appendChild(leftDiv);
+      li.appendChild(deleteBtn);
+
+      todoList.appendChild(li);
+    }
+
+    // -----------------------------
+    // 할 일 추가
+    // -----------------------------
+    async function addTodo() {
+      const title = todoInput.value.trim();
+
+      if (title === "") {
+        alert("할 일을 입력해주세요.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/todos`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ title: title })
+        });
+
+        if (!response.ok) {
+          throw new Error("할 일 추가 실패");
+        }
+
+        // 입력창 비우기
+        todoInput.value = "";
+
+        // 목록 다시 불러오기
+        loadTodos();
+      } catch (error) {
+        console.error("추가 실패:", error);
+        alert("할 일 추가에 실패했습니다.");
+      }
+    }
+
+    // -----------------------------
+    // 완료 상태 변경
+    // -----------------------------
+    async function updateTodo(todoId, completed) {
+      try {
+        const response = await fetch(`${API_URL}/todos/${todoId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ completed: completed })
+        });
+
+        if (!response.ok) {
+          throw new Error("완료 상태 변경 실패");
+        }
+
+        loadTodos();
+      } catch (error) {
+        console.error("수정 실패:", error);
+        alert("완료 상태 변경에 실패했습니다.");
+      }
+    }
+
+    // -----------------------------
+    // 할 일 삭제
+    // -----------------------------
+    async function deleteTodo(todoId) {
+      try {
+        const response = await fetch(`${API_URL}/todos/${todoId}`, {
+          method: "DELETE"
+        });
+
+        if (!response.ok) {
+          throw new Error("삭제 실패");
+        }
+
+        loadTodos();
+      } catch (error) {
+        console.error("삭제 실패:", error);
+        alert("삭제에 실패했습니다.");
+      }
+    }
+
+    // 버튼 클릭 시 추가
+    addBtn.addEventListener("click", addTodo);
+
+    // 엔터 입력 시 추가
+    todoInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        addTodo();
+      }
+    });
+
+    // 처음 페이지가 열리면 목록 조회
+    loadTodos();
+  </script>
+</body>
+</html>
