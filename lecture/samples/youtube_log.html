@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>유튜브 학습 기록 앱</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #222;
+      }
+
+      .container {
+        width: min(92vw, 760px);
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        text-align: center;
+      }
+
+      .description {
+        margin: 0 0 24px;
+        text-align: center;
+        color: #666;
+        line-height: 1.5;
+      }
+
+      .form-box {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #ccd5e3;
+        border-radius: 12px;
+        font-size: 15px;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+
+      .add-button {
+        background: #2563eb;
+        color: #fff;
+      }
+
+      .add-button:hover {
+        opacity: 0.92;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+
+      .count {
+        font-weight: bold;
+      }
+
+      .message {
+        min-height: 24px;
+        color: #d9485f;
+        font-size: 14px;
+      }
+
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: #f8fbff;
+      }
+
+      .item-left {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .video-link {
+        display: inline-block;
+        max-width: 100%;
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: bold;
+        word-break: break-all;
+      }
+
+      .video-link:hover {
+        text-decoration: underline;
+      }
+
+      .video-id {
+        margin-top: 6px;
+        font-size: 13px;
+        color: #666;
+      }
+
+      .delete-button {
+        background: #ef4444;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .delete-button:hover {
+        opacity: 0.92;
+      }
+
+      .empty-box {
+        text-align: center;
+        color: #666;
+        padding: 30px 10px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 14px;
+        background: #fafcff;
+      }
+
+      @media (max-width: 640px) {
+        .form-box {
+          grid-template-columns: 1fr;
+        }
+
+        .item {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .delete-button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>유튜브 학습 기록 앱</h1>
+      <p class="description">
+        공부한 유튜브 영상 링크를 저장하고, 나중에 다시 열어볼 수 있습니다.
+      </p>
+
+      <div class="form-box">
+        <input
+          type="text"
+          id="urlInput"
+          placeholder="유튜브 영상 URL을 입력하세요"
+        />
+        <button class="add-button" id="addButton">저장하기</button>
+      </div>
+
+      <div class="info-row">
+        <div class="count">저장된 영상 수: <span id="countText">0</span></div>
+        <div class="message" id="message"></div>
+      </div>
+
+      <div class="list" id="videoList"></div>
+    </div>
+
+    <script>
+      // localStorage에 저장할 key 이름
+      const STORAGE_KEY = "youtube-study-records";
+
+      // HTML 요소 가져오기
+      const urlInput = document.getElementById("urlInput");
+      const addButton = document.getElementById("addButton");
+      const videoList = document.getElementById("videoList");
+      const countText = document.getElementById("countText");
+      const message = document.getElementById("message");
+
+      // 앱에서 사용할 영상 목록 배열
+      let videos = loadVideos();
+
+      // localStorage에서 데이터 불러오기
+      function loadVideos() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (!saved) {
+          return [];
+        }
+
+        try {
+          return JSON.parse(saved);
+        } catch (error) {
+          console.error("저장된 데이터를 읽는 중 오류 발생:", error);
+          return [];
+        }
+      }
+
+      // localStorage에 데이터 저장하기
+      function saveVideos() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
+      }
+
+      // 간단한 유튜브 URL 검사
+      function isYouTubeUrl(url) {
+        return url.includes("youtube.com/watch") || url.includes("youtu.be/");
+      }
+
+      // 유튜브 영상 ID 뽑기
+      function extractVideoId(url) {
+        try {
+          const parsedUrl = new URL(url);
+
+          if (parsedUrl.hostname.includes("youtu.be")) {
+            return parsedUrl.pathname.replace("/", "") || "알 수 없음";
+          }
+
+          if (parsedUrl.hostname.includes("youtube.com")) {
+            return parsedUrl.searchParams.get("v") || "알 수 없음";
+          }
+
+          return "알 수 없음";
+        } catch (error) {
+          return "알 수 없음";
+        }
+      }
+
+      // 메시지 출력
+      function showMessage(text, isError = true) {
+        message.textContent = text;
+        message.style.color = isError ? "#d9485f" : "#15803d";
+      }
+
+      // 목록 화면에 출력
+      function renderVideos() {
+        videoList.innerHTML = "";
+        countText.textContent = videos.length;
+
+        if (videos.length === 0) {
+          videoList.innerHTML = `
+            <div class="empty-box">
+              아직 저장된 영상이 없습니다.<br />
+              유튜브 링크를 입력해서 첫 기록을 만들어보세요.
+            </div>
+          `;
+          return;
+        }
+
+        videos.forEach((video) => {
+          const item = document.createElement("div");
+          item.className = "item";
+
+          item.innerHTML = `
+            <div class="item-left">
+              <a class="video-link" href="${video.url}" target="_blank" rel="noopener noreferrer">
+                ${video.url}
+              </a>
+              <div class="video-id">영상 ID: ${video.videoId}</div>
+            </div>
+            <button class="delete-button" data-id="${video.id}">삭제</button>
+          `;
+
+          videoList.appendChild(item);
+        });
+      }
+
+      // 영상 추가
+      function addVideo() {
+        const url = urlInput.value.trim();
+
+        if (url === "") {
+          showMessage("유튜브 URL을 입력해주세요.");
+          return;
+        }
+
+        if (!isYouTubeUrl(url)) {
+          showMessage("유튜브 링크 형식이 아닙니다. 다시 확인해주세요.");
+          return;
+        }
+
+        const newVideo = {
+          id: Date.now(),
+          url: url,
+          videoId: extractVideoId(url),
+        };
+
+        videos.unshift(newVideo);
+        saveVideos();
+        renderVideos();
+
+        urlInput.value = "";
+        showMessage("영상이 저장되었습니다.", false);
+      }
+
+      // 영상 삭제
+      function deleteVideo(videoId) {
+        videos = videos.filter((video) => video.id !== Number(videoId));
+        saveVideos();
+        renderVideos();
+        showMessage("영상이 삭제되었습니다.", false);
+      }
+
+      // 저장 버튼 클릭 이벤트
+      addButton.addEventListener("click", addVideo);
+
+      // 엔터 키로도 저장 가능하게 처리
+      urlInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          addVideo();
+        }
+      });
+
+      // 삭제 버튼 이벤트 위임
+      videoList.addEventListener("click", function (event) {
+        if (event.target.classList.contains("delete-button")) {
+          const videoId = event.target.dataset.id;
+          deleteVideo(videoId);
+        }
+      });
+
+      // 처음 화면 출력
+      renderVideos();
+    </script>
+  </body>
+</html>

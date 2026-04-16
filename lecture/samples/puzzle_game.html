@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>간단한 퍼즐 게임</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f5f7fb;
+        color: #222;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .container {
+        width: min(92vw, 520px);
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        text-align: center;
+      }
+
+      .description {
+        margin: 0 0 18px;
+        text-align: center;
+        color: #666;
+        line-height: 1.5;
+      }
+
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+
+      .status {
+        font-weight: bold;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+        cursor: pointer;
+        background: #2563eb;
+        color: white;
+      }
+
+      button:hover {
+        opacity: 0.92;
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      .card {
+        aspect-ratio: 1 / 1;
+        border-radius: 16px;
+        border: 2px solid #dbe3f0;
+        background: #dbeafe;
+        font-size: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.15s ease, background 0.2s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+      }
+
+      .card.hidden {
+        background: #2563eb;
+        color: transparent;
+      }
+
+      .card.matched {
+        background: #bbf7d0;
+        border-color: #86efac;
+        cursor: default;
+      }
+
+      .message {
+        margin-top: 18px;
+        min-height: 24px;
+        text-align: center;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>간단한 퍼즐 게임</h1>
+      <p class="description">
+        같은 그림 2개를 찾아 모두 맞추면 클리어입니다.
+      </p>
+
+      <div class="top-bar">
+        <div class="status">시도 횟수: <span id="tries">0</span></div>
+        <button id="resetButton">다시 시작</button>
+      </div>
+
+      <div class="board" id="board"></div>
+      <div class="message" id="message">카드를 눌러 시작하세요.</div>
+    </div>
+
+    <script>
+      // 카드에 사용할 그림(이모지) 8개
+      const icons = ["🍎", "🍌", "🍇", "🍒", "🍊", "🥝", "🍉", "🍓"];
+
+      // 같은 그림이 2장씩 필요하므로 배열을 2배로 만든다.
+      let cardValues = [...icons, ...icons];
+
+      // 게임 상태를 저장할 변수들
+      let firstCard = null;
+      let secondCard = null;
+      let lockBoard = false;
+      let tries = 0;
+      let matchedCount = 0;
+
+      const board = document.getElementById("board");
+      const triesText = document.getElementById("tries");
+      const message = document.getElementById("message");
+      const resetButton = document.getElementById("resetButton");
+
+      // 배열 섞기 함수
+      function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+      }
+
+      // 게임판 생성
+      function createBoard() {
+        board.innerHTML = "";
+        shuffle(cardValues);
+
+        cardValues.forEach((value) => {
+          const card = document.createElement("div");
+          card.className = "card hidden";
+          card.dataset.value = value;
+          card.textContent = value;
+          card.addEventListener("click", handleCardClick);
+          board.appendChild(card);
+        });
+      }
+
+      // 카드 클릭 처리
+      function handleCardClick(event) {
+        const clickedCard = event.currentTarget;
+
+        // 이미 열렸거나 맞춘 카드면 무시
+        if (
+          lockBoard ||
+          clickedCard === firstCard ||
+          clickedCard.classList.contains("matched") ||
+          !clickedCard.classList.contains("hidden")
+        ) {
+          return;
+        }
+
+        // 카드 공개
+        clickedCard.classList.remove("hidden");
+
+        if (!firstCard) {
+          firstCard = clickedCard;
+          return;
+        }
+
+        secondCard = clickedCard;
+        tries++;
+        triesText.textContent = tries;
+        checkMatch();
+      }
+
+      // 두 카드가 같은지 검사
+      function checkMatch() {
+        if (firstCard.dataset.value === secondCard.dataset.value) {
+          firstCard.classList.add("matched");
+          secondCard.classList.add("matched");
+          matchedCount += 2;
+          message.textContent = "정답! 같은 그림을 찾았습니다.";
+          resetTurn();
+          checkClear();
+        } else {
+          lockBoard = true;
+          message.textContent = "아쉽네요. 다시 기억해보세요.";
+
+          setTimeout(() => {
+            firstCard.classList.add("hidden");
+            secondCard.classList.add("hidden");
+            resetTurn();
+          }, 800);
+        }
+      }
+
+      // 한 턴이 끝났을 때 상태 초기화
+      function resetTurn() {
+        [firstCard, secondCard] = [null, null];
+        lockBoard = false;
+      }
+
+      // 클리어 조건 검사
+      function checkClear() {
+        if (matchedCount === cardValues.length) {
+          message.textContent = `축하합니다! ${tries}번 만에 모두 맞췄습니다.`;
+        }
+      }
+
+      // 게임 초기화
+      function resetGame() {
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
+        tries = 0;
+        matchedCount = 0;
+        triesText.textContent = tries;
+        message.textContent = "카드를 눌러 시작하세요.";
+        createBoard();
+      }
+
+      resetButton.addEventListener("click", resetGame);
+
+      // 처음 실행할 때 게임판 생성
+      resetGame();
+    </script>
+  </body>
+</html>
