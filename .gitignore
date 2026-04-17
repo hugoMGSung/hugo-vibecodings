@@ -28,3 +28,6 @@ doc/api/
 .flutter-plugins
 .flutter-plugins-dependencies
 lecture/samples/venv/
+flutter/fintech_mvp_framework/android/.settings/org.eclipse.buildship.core.prefs
+flutter/flame_puzzle_framework/android/.settings/org.eclipse.buildship.core.prefs
+flutter/habit_tracker_app/android/.settings/org.eclipse.buildship.core.prefs
