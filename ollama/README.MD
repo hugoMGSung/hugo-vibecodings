@@ -1,8 +1,15 @@
 # Ollama 
 
+- ChatGPT 같은 대규모 언어 모델(LLM)을 개인 PC나 서버 등 로컬 환경에서 무료로 쉽게 설치하고 실행할 수 있도록 도와주는 오픈소스 플랫폼
+
 ## 사용법
 
 ### 설치
+
+- powershell 설치 명령어
+    `irm https://ollama.com/install.ps1 | iex`
+
+
 
 - https://ollama.com/ 웹사이트 진입
 - 다운로드 페이지에서 OS플랫폼에 맞춰서 다운로드
