@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "my-mcp": {
+      "command": "D:\\01_Programming\\181_Hugo_Projects\\hugo-vibecodings\\vibe-venv\\Scripts\\python.exe",
+      "args": ["McpServer/test/server.py"]
+    }
+  }
+}

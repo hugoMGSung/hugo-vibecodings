@@ -304,3 +304,125 @@ if __name__ == "__main__":
 
 ### 최소 MCP 서버 하나 만들어보기
 
+- 서버소스
+    ```python
+    from fastmcp import FastMCP
+
+    mcp = FastMCP("test-server")
+
+    @mcp.tool()
+    def add(a: int, b: int) -> int:
+        return a + b
+
+    if __name__ == "__main__":
+        mcp.run()
+    ```
+
+- 서버 실행
+
+    ```powershell
+    > python server.py
+    ```
+
+    ![alt text](image-10.png)
+
+### MCP Client 연결
+
+#### 첫번째
+
+1. VS Code / Copilot Chat 연동 : MCP 설정 파일 작성 (.vscode/mcp.json 또는 설정)
+    - .vscode/mcp.json 작성
+
+    ```json
+    {
+    "servers": {
+        "my-mcp": {
+        "command": "D:\\01_Programming\\181_Hugo_Projects\\hugo-vibecodings\\vibe-venv\\Scripts\\python.exe",
+        "args": ["McpServer/test/server.py"]
+        }
+    }
+    }
+    ```
+
+2. F1 또는 Ctrl+Shift+P 로 명령 팔레트 실행
+
+    ![alt text](image-11.png)
+
+
+3. 나열된 서버에서 위의 mcp.json에서 작성한 my-mcp 선택
+
+    ![alt text](image-12.png)
+
+4. 서버 실행 확인
+
+    ```powershell
+    10:35:22.066 [info] 서버 my-mcp 시작하는 중
+    10:35:22.066 [info] 연결 상태: 시작
+    10:35:22.068 [info] Starting server from LocalProcess extension host
+    10:35:22.074 [info] 연결 상태: 시작
+    10:35:22.074 [info] 연결 상태: 실행 중
+    10:35:23.339 [warning] [server stderr] 
+    10:35:23.339 [warning] [server stderr] 
+    10:35:23.339 [warning] [server stderr] +-----------------------------------------------------------------------------+
+    10:35:23.339 [warning] [server stderr] |                                                                             |
+    10:35:23.340 [warning] [server stderr] |                                                                             |
+    10:35:23.340 [warning] [server stderr] |                        \u2584\u2580\u2580 \u2584\u2580\u2588 \u2588\u2580\u2580 \u2580\u2588\u2580 \u2588\u2580\u2584\u2580\u2588 \u2588\u2580\u2580 \u2588\u2580\u2588                        |
+    10:35:23.340 [warning] [server stderr] |                        \u2588\u2580  \u2588\u2580\u2588 \u2584\u2584\u2588  \u2588  \u2588 \u2580 \u2588 \u2588\u2584\u2584 \u2588\u2580\u2580                        |
+    10:35:23.340 [warning] [server stderr] |                                                                             |
+    10:35:23.340 [warning] [server stderr] |                                                                             |
+    10:35:23.340 [warning] [server stderr] |                                                                             |
+    10:35:23.341 [warning] [server stderr] |                                FastMCP 3.2.4                                |
+    10:35:23.341 [warning] [server stderr] |                            https://gofastmcp.com                            |
+    10:35:23.341 [warning] [server stderr] |                                                                             |
+    10:35:23.341 [warning] [server stderr] |                 \U0001f5a5  Server:      test-server, 3.2.4                          |
+    10:35:23.341 [warning] [server stderr] |                 \U0001f680 Deploy free: https://horizon.prefect.io                  |
+    10:35:23.342 [warning] [server stderr] |                                                                             |
+    10:35:23.342 [warning] [server stderr] +-----------------------------------------------------------------------------+
+    10:35:23.342 [warning] [server stderr] 
+    10:35:23.342 [warning] [server stderr] 
+    10:35:23.343 [warning] [server stderr] [04/27/26 10:35:23] INFO     Starting MCP server 'test-server' transport.py:209
+    10:35:23.343 [warning] [server stderr]                              with transport 'stdio'
+    10:35:23.377 [info] Discovered 1 tools
+    10:35:23.377 [warning] Tool add does not have a description. Tools must be accurately described to be called
+    20:38:52.283 [info] 서버 중지 중 my-mcp
+    20:38:52.452 [info] 연결 상태: 중지됨
+    20:38:58.694 [info] 서버 my-mcp 시작하는 중
+    20:38:58.694 [info] 연결 상태: 시작
+    20:38:58.694 [info] Starting server from LocalProcess extension host
+    20:38:58.704 [info] 연결 상태: 시작
+    20:38:58.705 [info] 연결 상태: 실행 중
+    20:39:03.011 [warning] [server stderr] 
+    20:39:03.012 [warning] [server stderr] 
+    20:39:03.012 [warning] [server stderr] +-----------------------------------------------------------------------------+
+    20:39:03.012 [warning] [server stderr] |                                                                             |
+    20:39:03.012 [warning] [server stderr] |                                                                             |
+    20:39:03.013 [warning] [server stderr] |                        \u2584\u2580\u2580 \u2584\u2580\u2588 \u2588\u2580\u2580 \u2580\u2588\u2580 \u2588\u2580\u2584\u2580\u2588 \u2588\u2580\u2580 \u2588\u2580\u2588                        |
+    20:39:03.013 [warning] [server stderr] |                        \u2588\u2580  \u2588\u2580\u2588 \u2584\u2584\u2588  \u2588  \u2588 \u2580 \u2588 \u2588\u2584\u2584 \u2588\u2580\u2580                        |
+    20:39:03.014 [warning] [server stderr] |                                                                             |
+    20:39:03.014 [warning] [server stderr] |                                                                             |
+    20:39:03.014 [warning] [server stderr] |                                                                             |
+    20:39:03.015 [warning] [server stderr] |                                FastMCP 3.2.4                                |
+    20:39:03.015 [warning] [server stderr] |                            https://gofastmcp.com                            |
+    20:39:03.015 [warning] [server stderr] |                                                                             |
+    20:39:03.015 [warning] [server stderr] |                 \U0001f5a5  Server:      test-server, 3.2.4                          |
+    20:39:03.016 [warning] [server stderr] |                 \U0001f680 Deploy free: https://horizon.prefect.io                  |
+    20:39:03.016 [warning] [server stderr] |                                                                             |
+    20:39:03.016 [warning] [server stderr] +-----------------------------------------------------------------------------+
+    20:39:03.016 [warning] [server stderr] 
+    20:39:03.017 [warning] [server stderr] 
+    20:39:03.017 [warning] [server stderr] [04/27/26 20:39:03] INFO     Starting MCP server 'test-server' transport.py:209
+    20:39:03.017 [warning] [server stderr]                              with transport 'stdio'
+    20:39:03.100 [info] Discovered 1 tools
+    20:39:03.100 [warning] Tool add does not have a description. Tools must be accurately described to be called
+    ```
+
+
+5. Copliot Chat 창
+    - Agent 선택
+
+    ![alt text](image-13.png)
+
+6. 답안 요청
+
+    ![alt text](image-14.png)
+
