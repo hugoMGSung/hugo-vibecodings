@@ -10,4 +10,4 @@
 - 기온 등 날씨표시 레이어
 - 선박 정보 표시 팝업
 
-![alt text](image-1.png)
+![alt text](image-2.png)

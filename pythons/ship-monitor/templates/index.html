@@ -61,21 +61,27 @@
       padding-bottom: 6px;
     }
 
+    .ship-empty {
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
     .weather-layer {
       position: absolute;
-      top: 12px;
-      left: 50%;
+      left: 12px;
+      bottom: 12px;
       z-index: 999;
       display: grid;
       grid-template-columns: repeat(4, minmax(70px, 1fr));
       gap: 8px;
       width: min(460px, calc(100% - 32px));
       padding: 10px 12px;
-      background: rgba(255,255,255,0.94);
+      background: rgba(255,255,255,0.6);
       border-radius: 999px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.22);
-      transform: translateX(-50%);
     }
+
 
     .weather-item {
       min-width: 0;
@@ -267,6 +273,10 @@
       background: #22a7df;
     }
 
+    .ship-popup-danger {
+      background: #d95050;
+    }
+
     .ship-popup-success {
       background: #67b935;
     }
@@ -443,6 +453,9 @@
     }).addTo(map);
 
     const markers = {};
+    const latestShips = new Map();
+    const fleetShipIds = new Set();
+    const shipList = document.getElementById("shipList");
     const shipPanel = document.getElementById("shipPanel");
     const panelToggle = document.getElementById("panelToggle");
 
@@ -467,6 +480,9 @@
       const lat = Number(ship.lat).toFixed(4);
       const lng = Number(ship.lng).toFixed(4);
       const speed = Number(ship.speed).toFixed(1);
+      const isInFleet = fleetShipIds.has(ship.id);
+      const fleetButtonText = isInFleet ? "Remove to Fleet" : "Add to Fleet";
+      const fleetButtonClass = isInFleet ? "ship-popup-danger" : "ship-popup-primary";
 
       return `
         <div class="ship-popup">
@@ -480,7 +496,7 @@
           <div class="ship-popup-photo"></div>
           <div class="ship-popup-actions">
             <button class="ship-popup-action ship-popup-menu" type="button">≡</button>
-            <button class="ship-popup-action ship-popup-primary" type="button">Add to Fleet</button>
+            <button class="ship-popup-action ${fleetButtonClass} fleet-toggle" data-ship-id="${ship.id}" type="button">${fleetButtonText}</button>
             <button class="ship-popup-action ship-popup-success" type="button">Vessel Details</button>
           </div>
           <div class="ship-popup-route">
@@ -508,14 +524,74 @@
       `;
     };
 
+    const renderFleetList = () => {
+      const fleetShips = [...fleetShipIds]
+        .map(id => latestShips.get(id))
+        .filter(Boolean);
+
+      if (fleetShips.length === 0) {
+        shipList.innerHTML = `<div class="ship-empty">Fleet에 추가된 선박이 없습니다.<br>선박 팝업에서 Add to Fleet을 눌러 추가하세요.</div>`;
+        return;
+      }
+
+      shipList.innerHTML = fleetShips.map(ship => `
+        <div class="ship-item">
+          <b>${ship.name}</b><br>
+          ${ship.id}<br>
+          속도: ${ship.speed} kn / 침로: ${ship.course}°
+        </div>
+      `).join("");
+    };
+
+    const updateFleetButton = (button, isInFleet) => {
+      button.textContent = isInFleet ? "Remove to Fleet" : "Add to Fleet";
+      button.classList.toggle("ship-popup-danger", isInFleet);
+      button.classList.toggle("ship-popup-primary", !isInFleet);
+    };
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest(".fleet-toggle");
+      if (!button) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const shipId = button.dataset.shipId;
+      const ship = latestShips.get(shipId);
+
+      if (!ship) {
+        return;
+      }
+
+      if (fleetShipIds.has(shipId)) {
+        fleetShipIds.delete(shipId);
+      } else {
+        fleetShipIds.add(shipId);
+      }
+
+      const isInFleet = fleetShipIds.has(shipId);
+      updateFleetButton(button, isInFleet);
+      renderFleetList();
+
+      if (markers[shipId]) {
+        const popup = markers[shipId].getPopup();
+        if (popup) {
+          popup.setContent(createShipPopup(ship));
+        }
+      }
+    });
+
+    renderFleetList();
+
     const ws = new WebSocket(`ws://${location.host}/ws/ships`);
 
     ws.onmessage = (event) => {
       const ships = JSON.parse(event.data);
-      const shipList = document.getElementById("shipList");
-      shipList.innerHTML = "";
 
       ships.forEach(ship => {
+        latestShips.set(ship.id, ship);
         const latlng = [ship.lat, ship.lng];
 
         if (!markers[ship.id]) {
@@ -532,15 +608,9 @@
           closeButton: true,
           minWidth: 270
         });
-
-        shipList.innerHTML += `
-          <div class="ship-item">
-            <b>${ship.name}</b><br>
-            ${ship.id}<br>
-            속도: ${ship.speed} kn / 침로: ${ship.course}°
-          </div>
-        `;
       });
+
+      renderFleetList();
     };
   </script>
 </body>

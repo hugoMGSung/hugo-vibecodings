@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>비행기 위치 모니터링</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
+
+    .panel {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 999;
+      min-width: 280px;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.94);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      transition: transform 0.25s ease;
+    }
+
+    .panel.collapsed {
+      transform: translateX(calc(-100% - 12px));
+    }
+
+    .panel-toggle {
+      position: absolute;
+      top: 50%;
+      right: -34px;
+      width: 34px;
+      height: 56px;
+      border: 0;
+      border-radius: 0 8px 8px 0;
+      background: rgba(255,255,255,0.94);
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.22);
+      color: #1f2933;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 700;
+      transform: translateY(-50%);
+    }
+
+    .panel h3 {
+      margin: 4px 0 12px;
+      font-size: 18px;
+    }
+
+    .plane-item {
+      font-size: 14px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #d9dee7;
+      padding-bottom: 8px;
+    }
+
+    .plane-item:last-child {
+      margin-bottom: 0;
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .plane-empty {
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .weather-layer {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      z-index: 999;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(70px, 1fr));
+      gap: 8px;
+      width: min(460px, calc(100% - 32px));
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 999px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.22);
+    }
+
+    .weather-item {
+      min-width: 0;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .weather-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: #7b8794;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .weather-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #e8f4ff;
+      color: #1883d8;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .weather-value {
+      margin-top: 2px;
+      color: #1f2933;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .plane-marker {
+      width: 34px;
+      height: 34px;
+      background: transparent;
+      border: 0;
+    }
+
+    .plane-icon {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      transform-origin: 50% 50%;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.42));
+    }
+
+    .plane-icon::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 2px;
+      width: 7px;
+      height: 27px;
+      border-radius: 8px 8px 4px 4px;
+      background: #f8fafc;
+      border: 2px solid #1d4ed8;
+      transform: translateX(-50%);
+      box-sizing: border-box;
+    }
+
+    .plane-icon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 12px;
+      width: 29px;
+      height: 8px;
+      background: #2563eb;
+      clip-path: polygon(0 40%, 44% 0, 56% 0, 100% 40%, 56% 100%, 44% 100%);
+      transform: translateX(-50%);
+    }
+
+    .plane-tail {
+      position: absolute;
+      left: 50%;
+      bottom: 2px;
+      width: 19px;
+      height: 8px;
+      background: #1e3a8a;
+      clip-path: polygon(0 100%, 42% 0, 58% 0, 100% 100%);
+      transform: translateX(-50%);
+    }
+
+    .plane-detail-popup .leaflet-popup-content-wrapper {
+      overflow: hidden;
+      padding: 0;
+      border-radius: 4px;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    }
+
+    .plane-detail-popup .leaflet-popup-content {
+      width: 286px !important;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .plane-detail-popup .leaflet-popup-close-button {
+      top: 6px;
+      right: 6px;
+      z-index: 1;
+      color: #cbd5ff;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .plane-detail-popup .leaflet-popup-close-button:hover {
+      color: #ffffff;
+    }
+
+    .plane-popup {
+      color: #1f2933;
+    }
+
+    .plane-popup-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px;
+      background: #10245d;
+      color: #ffffff;
+    }
+
+    .plane-popup-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #1d4ed8;
+      font-weight: 800;
+    }
+
+    .plane-popup-title {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .plane-popup-flight {
+      overflow: hidden;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.1;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .plane-popup-airline {
+      margin-top: 2px;
+      color: #c5d4ff;
+      font-size: 11px;
+    }
+
+    .plane-popup-hero {
+      height: 92px;
+      background:
+        linear-gradient(rgba(16,36,93,0.18), rgba(16,36,93,0.1)),
+        linear-gradient(160deg, #8ec5f4 0%, #d9efff 46%, #f8fafc 47%, #a8d7f7 100%);
+      position: relative;
+    }
+
+    .plane-popup-hero::before {
+      content: "";
+      position: absolute;
+      left: 86px;
+      bottom: 31px;
+      width: 112px;
+      height: 12px;
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 2px solid #1d4ed8;
+    }
+
+    .plane-popup-hero::after {
+      content: "";
+      position: absolute;
+      left: 96px;
+      bottom: 39px;
+      width: 92px;
+      height: 26px;
+      background: #2563eb;
+      clip-path: polygon(0 55%, 48% 0, 58% 0, 100% 55%, 56% 85%, 44% 85%);
+    }
+
+    .plane-popup-actions {
+      display: grid;
+      grid-template-columns: 38px 1fr 1fr;
+      gap: 6px;
+      padding: 7px;
+      background: #10245d;
+    }
+
+    .plane-popup-action {
+      border: 0;
+      border-radius: 2px;
+      padding: 7px 5px;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .plane-popup-menu {
+      background: #0b163d;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .plane-popup-primary {
+      background: #1ea7e1;
+    }
+
+    .plane-popup-danger {
+      background: #d95050;
+    }
+
+    .plane-popup-success {
+      background: #35a852;
+    }
+
+    .plane-popup-route {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .plane-popup-airport {
+      font-size: 20px;
+      font-weight: 800;
+      color: #4b5563;
+    }
+
+    .plane-popup-time {
+      margin-top: 3px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .plane-popup-arrival {
+      text-align: right;
+    }
+
+    .plane-popup-progress {
+      position: relative;
+      height: 22px;
+      margin: 0 14px;
+      border-bottom: 2px solid #3aa7df;
+    }
+
+    .plane-popup-progress::before,
+    .plane-popup-progress::after {
+      content: "";
+      position: absolute;
+      bottom: -5px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #3aa7df;
+    }
+
+    .plane-popup-progress::before {
+      left: 0;
+    }
+
+    .plane-popup-progress::after {
+      right: 0;
+    }
+
+    .plane-popup-progress span {
+      position: absolute;
+      left: 50%;
+      bottom: -10px;
+      color: #3aa7df;
+      font-size: 18px;
+      transform: translateX(-50%) rotate(90deg);
+    }
+
+    .plane-popup-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .plane-popup-button {
+      border: 0;
+      border-radius: 2px;
+      padding: 8px 6px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .plane-popup-blue {
+      background: #16a8dc;
+    }
+
+    .plane-popup-gray {
+      background: #a6a9ad;
+    }
+
+    .plane-popup-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      background: #10245d;
+      color: #ffffff;
+    }
+
+    .plane-popup-stat {
+      padding: 8px 7px;
+      border-right: 1px solid rgba(255,255,255,0.18);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .plane-popup-stat:last-child {
+      border-right: 0;
+    }
+
+    .plane-popup-stat strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+    }
+
+    .plane-popup-footer {
+      padding: 7px 10px;
+      background: #4b5877;
+      color: #d5dbea;
+      font-size: 11px;
+    }
+
+    @media (max-width: 620px) {
+      .weather-layer {
+        left: 8px;
+        bottom: 8px;
+        grid-template-columns: repeat(4, minmax(54px, 1fr));
+        gap: 4px;
+        padding: 8px;
+        width: calc(100% - 16px);
+      }
+
+      .weather-label {
+        font-size: 11px;
+      }
+
+      .weather-value {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="panel" id="planePanel">
+    <button class="panel-toggle" id="panelToggle" type="button" aria-label="비행기 모니터링 패널 접기">&lsaquo;</button>
+    <h3>비행기 위치 모니터링</h3>
+    <div id="planeList"></div>
+  </div>
+
+  <div class="weather-layer" aria-label="기상 정보">
+    <div class="weather-item">
+      <div class="weather-label"><span class="weather-icon">T</span>기온</div>
+      <div class="weather-value">22.4°C</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-label"><span class="weather-icon">D</span>풍향</div>
+      <div class="weather-value">서풍</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-label"><span class="weather-icon">W</span>풍속</div>
+      <div class="weather-value">5.2 m/s</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-label"><span class="weather-icon">G</span>돌풍</div>
+      <div class="weather-value">8 m/s</div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    const map = L.map("map", {
+      zoomControl: false
+    }).setView([37.45, 126.78], 10);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "OpenStreetMap"
+    }).addTo(map);
+
+    const markers = {};
+    const latestPlanes = new Map();
+    const trackedPlaneIds = new Set();
+    const planeList = document.getElementById("planeList");
+    const planePanel = document.getElementById("planePanel");
+    const panelToggle = document.getElementById("panelToggle");
+
+    panelToggle.addEventListener("click", () => {
+      const collapsed = planePanel.classList.toggle("collapsed");
+      panelToggle.innerHTML = collapsed ? "&rsaquo;" : "&lsaquo;";
+      panelToggle.setAttribute(
+        "aria-label",
+        collapsed ? "비행기 모니터링 패널 펼치기" : "비행기 모니터링 패널 접기"
+      );
+    });
+
+    const createPlaneIcon = (heading) => L.divIcon({
+      className: "plane-marker",
+      html: `<div class="plane-icon" style="transform: rotate(${heading}deg)"><span class="plane-tail"></span></div>`,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -17]
+    });
+
+    const createPlanePopup = (plane) => {
+      const lat = Number(plane.lat).toFixed(4);
+      const lng = Number(plane.lng).toFixed(4);
+      const altitude = Number(plane.altitude).toLocaleString();
+      const speed = Number(plane.speed).toLocaleString();
+      const isTracked = trackedPlaneIds.has(plane.id);
+      const trackButtonText = isTracked ? "Untrack Flight" : "Track Flight";
+      const trackButtonClass = isTracked ? "plane-popup-danger" : "plane-popup-primary";
+
+      return `
+        <div class="plane-popup">
+          <div class="plane-popup-header">
+            <span class="plane-popup-logo">✈</span>
+            <div class="plane-popup-title">
+              <div class="plane-popup-flight">${plane.flight}</div>
+              <div class="plane-popup-airline">${plane.airline} · ${plane.model}</div>
+            </div>
+          </div>
+          <div class="plane-popup-hero"></div>
+          <div class="plane-popup-actions">
+            <button class="plane-popup-action plane-popup-menu" type="button">≡</button>
+            <button class="plane-popup-action ${trackButtonClass} track-toggle" data-plane-id="${plane.id}" type="button">${trackButtonText}</button>
+            <button class="plane-popup-action plane-popup-success" type="button">Flight Details</button>
+          </div>
+          <div class="plane-popup-route">
+            <div>
+              <div class="plane-popup-airport">${plane.origin}</div>
+              <div class="plane-popup-time">DEP: 2026-07-13 10:20</div>
+            </div>
+            <div class="plane-popup-arrival">
+              <div class="plane-popup-airport">${plane.destination}</div>
+              <div class="plane-popup-time">ETA: 2026-07-13 11:35</div>
+            </div>
+          </div>
+          <div class="plane-popup-progress"><span>▲</span></div>
+          <div class="plane-popup-buttons">
+            <button class="plane-popup-button plane-popup-blue" type="button">Past Track</button>
+            <button class="plane-popup-button plane-popup-gray" type="button">Route Forecast</button>
+          </div>
+          <div class="plane-popup-stats">
+            <div class="plane-popup-stat">Status:<strong>${plane.status}</strong></div>
+            <div class="plane-popup-stat">Speed/Heading:<strong>${speed} kt / ${plane.heading}°</strong></div>
+            <div class="plane-popup-stat">Altitude:<strong>${altitude} ft</strong></div>
+          </div>
+          <div class="plane-popup-footer">Position: ${lat}, ${lng} · live WebSocket update</div>
+        </div>
+      `;
+    };
+
+    const renderTrackedList = () => {
+      const trackedPlanes = [...trackedPlaneIds]
+        .map(id => latestPlanes.get(id))
+        .filter(Boolean);
+
+      if (trackedPlanes.length === 0) {
+        planeList.innerHTML = `<div class="plane-empty">추적 중인 항공편이 없습니다.<br>항공기 팝업에서 Track Flight를 눌러 추가하세요.</div>`;
+        return;
+      }
+
+      planeList.innerHTML = trackedPlanes.map(plane => `
+        <div class="plane-item">
+          <b>${plane.flight}</b> · ${plane.airline}<br>
+          ${plane.origin} → ${plane.destination}<br>
+          고도: ${Number(plane.altitude).toLocaleString()} ft / 속도: ${plane.speed} kt / 방위: ${plane.heading}°
+        </div>
+      `).join("");
+    };
+
+    const updateTrackButton = (button, isTracked) => {
+      button.textContent = isTracked ? "Untrack Flight" : "Track Flight";
+      button.classList.toggle("plane-popup-danger", isTracked);
+      button.classList.toggle("plane-popup-primary", !isTracked);
+    };
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest(".track-toggle");
+      if (!button) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const planeId = button.dataset.planeId;
+      const plane = latestPlanes.get(planeId);
+
+      if (!plane) {
+        return;
+      }
+
+      if (trackedPlaneIds.has(planeId)) {
+        trackedPlaneIds.delete(planeId);
+      } else {
+        trackedPlaneIds.add(planeId);
+      }
+
+      const isTracked = trackedPlaneIds.has(planeId);
+      updateTrackButton(button, isTracked);
+      renderTrackedList();
+
+      if (markers[planeId]) {
+        const popup = markers[planeId].getPopup();
+        if (popup) {
+          popup.setContent(createPlanePopup(plane));
+        }
+      }
+    });
+
+    renderTrackedList();
+
+    const ws = new WebSocket(`ws://${location.host}/ws/planes`);
+
+    ws.onmessage = (event) => {
+      const planes = JSON.parse(event.data);
+
+      planes.forEach(plane => {
+        latestPlanes.set(plane.id, plane);
+        const latlng = [plane.lat, plane.lng];
+
+        if (!markers[plane.id]) {
+          markers[plane.id] = L.marker(latlng, {
+            icon: createPlaneIcon(plane.heading)
+          }).addTo(map);
+        } else {
+          markers[plane.id].setLatLng(latlng);
+          markers[plane.id].setIcon(createPlaneIcon(plane.heading));
+        }
+
+        markers[plane.id].bindPopup(createPlanePopup(plane), {
+          className: "plane-detail-popup",
+          closeButton: true,
+          minWidth: 286
+        });
+
+      });
+
+      renderTrackedList();
+    };
+  </script>
+</body>
+</html>
