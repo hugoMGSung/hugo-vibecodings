@@ -30,6 +30,28 @@
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.25);
       min-width: 260px;
+      transition: transform 0.25s ease;
+    }
+
+    .panel.collapsed {
+      transform: translateX(calc(-100% - 12px));
+    }
+
+    .panel-toggle {
+      position: absolute;
+      top: 50%;
+      right: -34px;
+      width: 34px;
+      height: 56px;
+      border: 0;
+      border-radius: 0 8px 8px 0;
+      background: rgba(255,255,255,0.94);
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.22);
+      color: #1f2933;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 700;
+      transform: translateY(-50%);
     }
 
     .ship-item {
@@ -38,12 +60,373 @@
       border-bottom: 1px solid #ddd;
       padding-bottom: 6px;
     }
+
+    .weather-layer {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      z-index: 999;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(70px, 1fr));
+      gap: 8px;
+      width: min(460px, calc(100% - 32px));
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.94);
+      border-radius: 999px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.22);
+      transform: translateX(-50%);
+    }
+
+    .weather-item {
+      min-width: 0;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .weather-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: #7b8794;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .weather-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #e8f4ff;
+      color: #1883d8;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .weather-value {
+      margin-top: 2px;
+      color: #1f2933;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .ship-marker {
+      width: 22px;
+      height: 22px;
+      background: transparent;
+      border: 0;
+    }
+
+    .ship-icon {
+      width: 22px;
+      height: 22px;
+      transform-origin: 50% 50%;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+    }
+
+    .ship-icon::before {
+      content: "";
+      width: 0;
+      height: 0;
+      display: block;
+      margin: 2px auto 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 18px solid #153a9a;
+    }
+
+    .ship-detail-popup .leaflet-popup-content-wrapper {
+      overflow: hidden;
+      padding: 0;
+      border-radius: 3px;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    }
+
+    .ship-detail-popup .leaflet-popup-content {
+      width: 270px !important;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .ship-detail-popup .leaflet-popup-close-button {
+      top: 6px;
+      right: 6px;
+      z-index: 1;
+      color: #cbd5ff;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .ship-detail-popup .leaflet-popup-close-button:hover {
+      color: #ffffff;
+    }
+
+    .ship-popup {
+      color: #1f2933;
+    }
+
+    .ship-popup-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #17245f;
+      color: #ffffff;
+    }
+
+    .ship-popup-flag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #ffffff;
+      font-size: 15px;
+    }
+
+    .ship-popup-title {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .ship-popup-name {
+      overflow: hidden;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.1;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ship-popup-type {
+      margin-top: 2px;
+      color: #b9c5ff;
+      font-size: 11px;
+    }
+
+    .ship-popup-photo {
+      height: 92px;
+      background:
+        linear-gradient(rgba(18,31,77,0.18), rgba(18,31,77,0.18)),
+        linear-gradient(170deg, #91b7ca 0%, #d4e1e7 45%, #738998 46%, #99b8c8 100%);
+      position: relative;
+    }
+
+    .ship-popup-photo::before {
+      content: "";
+      position: absolute;
+      left: 74px;
+      bottom: 24px;
+      width: 118px;
+      height: 13px;
+      border-radius: 2px 2px 10px 10px;
+      background: #26384c;
+    }
+
+    .ship-popup-photo::after {
+      content: "";
+      position: absolute;
+      left: 122px;
+      bottom: 37px;
+      width: 34px;
+      height: 17px;
+      background: #e7edf2;
+      box-shadow: -52px 30px 90px rgba(255,255,255,0.55);
+    }
+
+    .ship-popup-actions {
+      display: grid;
+      grid-template-columns: 38px 1fr 1fr;
+      gap: 6px;
+      padding: 7px;
+      background: #17245f;
+    }
+
+    .ship-popup-action {
+      border: 0;
+      border-radius: 2px;
+      padding: 7px 5px;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .ship-popup-menu {
+      background: #0d173f;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .ship-popup-primary {
+      background: #22a7df;
+    }
+
+    .ship-popup-success {
+      background: #67b935;
+    }
+
+    .ship-popup-route {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .ship-popup-port {
+      font-size: 18px;
+      font-weight: 700;
+      color: #4b5563;
+    }
+
+    .ship-popup-time {
+      margin-top: 3px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .ship-popup-arrival {
+      text-align: right;
+    }
+
+    .ship-popup-progress {
+      position: relative;
+      height: 22px;
+      margin: 0 14px;
+      border-bottom: 2px solid #3aa7df;
+    }
+
+    .ship-popup-progress::before,
+    .ship-popup-progress::after {
+      content: "";
+      position: absolute;
+      bottom: -5px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #3aa7df;
+    }
+
+    .ship-popup-progress::before {
+      left: 0;
+    }
+
+    .ship-popup-progress::after {
+      right: 0;
+    }
+
+    .ship-popup-progress span {
+      position: absolute;
+      left: 50%;
+      bottom: -9px;
+      color: #3aa7df;
+      font-size: 18px;
+      transform: translateX(-50%);
+    }
+
+    .ship-popup-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .ship-popup-button {
+      border: 0;
+      border-radius: 2px;
+      padding: 8px 6px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ship-popup-blue {
+      background: #16a8dc;
+    }
+
+    .ship-popup-gray {
+      background: #a6a9ad;
+    }
+
+    .ship-popup-stats {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr 0.9fr;
+      background: #17245f;
+      color: #ffffff;
+    }
+
+    .ship-popup-stat {
+      padding: 8px 7px;
+      border-right: 1px solid rgba(255,255,255,0.18);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .ship-popup-stat:last-child {
+      border-right: 0;
+    }
+
+    .ship-popup-stat strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+    }
+
+    .ship-popup-footer {
+      padding: 7px 10px;
+      background: #4b5877;
+      color: #d5dbea;
+      font-size: 11px;
+    }
+
+    @media (max-width: 620px) {
+      .weather-layer {
+        top: 8px;
+        grid-template-columns: repeat(4, minmax(54px, 1fr));
+        gap: 4px;
+        padding: 8px;
+        width: calc(100% - 16px);
+      }
+
+      .weather-label {
+        font-size: 11px;
+      }
+
+      .weather-value {
+        font-size: 15px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="panel">
+  <div class="panel" id="shipPanel">
+    <button class="panel-toggle" id="panelToggle" type="button" aria-label="선박 모니터링 패널 접기">&lsaquo;</button>
     <h3>선박 모니터링</h3>
     <div id="shipList"></div>
+  </div>
+
+  <div class="weather-layer" aria-label="기상 정보">
+    <div class="weather-item">
+      <div class="weather-label"><span class="weather-icon">T</span>기온</div>
+      <div class="weather-value">18.6°C</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-label"><span class="weather-icon">D</span>풍향</div>
+      <div class="weather-value">북동</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-label"><span class="weather-icon">W</span>풍속</div>
+      <div class="weather-value">3.9 m/s</div>
+    </div>
+    <div class="weather-item">
+      <div class="weather-label"><span class="weather-icon">G</span>돌풍</div>
+      <div class="weather-value">6 m/s</div>
+    </div>
   </div>
 
   <div id="map"></div>
@@ -51,13 +434,79 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <script>
-    const map = L.map("map").setView([35.095, 129.04], 12);
+    const map = L.map("map", {
+      zoomControl: false
+    }).setView([35.095, 129.04], 12);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "OpenStreetMap"
     }).addTo(map);
 
     const markers = {};
+    const shipPanel = document.getElementById("shipPanel");
+    const panelToggle = document.getElementById("panelToggle");
+
+    panelToggle.addEventListener("click", () => {
+      const collapsed = shipPanel.classList.toggle("collapsed");
+      panelToggle.innerHTML = collapsed ? "&rsaquo;" : "&lsaquo;";
+      panelToggle.setAttribute(
+        "aria-label",
+        collapsed ? "선박 모니터링 패널 펼치기" : "선박 모니터링 패널 접기"
+      );
+    });
+
+    const createShipIcon = (course) => L.divIcon({
+      className: "ship-marker",
+      html: `<div class="ship-icon" style="transform: rotate(${course}deg)"></div>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+      popupAnchor: [0, -11]
+    });
+
+    const createShipPopup = (ship) => {
+      const lat = Number(ship.lat).toFixed(4);
+      const lng = Number(ship.lng).toFixed(4);
+      const speed = Number(ship.speed).toFixed(1);
+
+      return `
+        <div class="ship-popup">
+          <div class="ship-popup-header">
+            <span class="ship-popup-flag">🇰🇷</span>
+            <div class="ship-popup-title">
+              <div class="ship-popup-name">${ship.name}</div>
+              <div class="ship-popup-type">Oil/Chemical Tanker · ${ship.id}</div>
+            </div>
+          </div>
+          <div class="ship-popup-photo"></div>
+          <div class="ship-popup-actions">
+            <button class="ship-popup-action ship-popup-menu" type="button">≡</button>
+            <button class="ship-popup-action ship-popup-primary" type="button">Add to Fleet</button>
+            <button class="ship-popup-action ship-popup-success" type="button">Vessel Details</button>
+          </div>
+          <div class="ship-popup-route">
+            <div>
+              <div class="ship-popup-port">BUSAN</div>
+              <div class="ship-popup-time">ATD: 2026-07-13 09:00</div>
+            </div>
+            <div class="ship-popup-arrival">
+              <div class="ship-popup-port">OPEN SEA</div>
+              <div class="ship-popup-time">ETA: 2026-07-13 18:00</div>
+            </div>
+          </div>
+          <div class="ship-popup-progress"><span>▲</span></div>
+          <div class="ship-popup-buttons">
+            <button class="ship-popup-button ship-popup-blue" type="button">Past Track</button>
+            <button class="ship-popup-button ship-popup-gray" type="button">Route Forecast</button>
+          </div>
+          <div class="ship-popup-stats">
+            <div class="ship-popup-stat">Status:<strong>Underway Using Engine</strong></div>
+            <div class="ship-popup-stat">Speed/Course:<strong>${speed}kn / ${ship.course}°</strong></div>
+            <div class="ship-popup-stat">Position:<strong>${lat}, ${lng}</strong></div>
+          </div>
+          <div class="ship-popup-footer">Received: live WebSocket update</div>
+        </div>
+      `;
+    };
 
     const ws = new WebSocket(`ws://${location.host}/ws/ships`);
 
@@ -70,17 +519,19 @@
         const latlng = [ship.lat, ship.lng];
 
         if (!markers[ship.id]) {
-          markers[ship.id] = L.marker(latlng).addTo(map);
+          markers[ship.id] = L.marker(latlng, {
+            icon: createShipIcon(ship.course)
+          }).addTo(map);
         } else {
           markers[ship.id].setLatLng(latlng);
+          markers[ship.id].setIcon(createShipIcon(ship.course));
         }
 
-        markers[ship.id].bindPopup(`
-          <b>${ship.name}</b><br>
-          ID: ${ship.id}<br>
-          속도: ${ship.speed} kn<br>
-          침로: ${ship.course}°
-        `);
+        markers[ship.id].bindPopup(createShipPopup(ship), {
+          className: "ship-detail-popup",
+          closeButton: true,
+          minWidth: 270
+        });
 
         shipList.innerHTML += `
           <div class="ship-item">
